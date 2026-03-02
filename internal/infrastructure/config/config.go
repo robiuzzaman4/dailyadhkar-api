@@ -12,12 +12,15 @@ import (
 )
 
 type Config struct {
-	AppEnv         string
-	ServerPort     string
-	DatabaseURL    string
-	UnosendAPIKey  string
-	EmailSendTime  string
-	EmailSendLimit int
+	AppEnv             string
+	ServerPort         string
+	DatabaseURL        string
+	UnosendAPIKey      string
+	EmailSendTime      string
+	EmailSendLimit     int
+	ClerkWebhookSecret string
+	ClerkJWKSURL       string
+	ClerkIssuer        string
 }
 
 func Load() (*Config, error) {
@@ -53,6 +56,13 @@ func Load() (*Config, error) {
 	if err != nil || cfg.EmailSendLimit <= 0 {
 		return nil, errors.New("EMAIL_SEND_LIMIT must be a positive integer")
 	}
+	if cfg.ClerkWebhookSecret, err = required("CLERK_WEBHOOK_SECRET"); err != nil {
+		return nil, err
+	}
+	if cfg.ClerkJWKSURL, err = required("CLERK_JWKS_URL"); err != nil {
+		return nil, err
+	}
+	cfg.ClerkIssuer = strings.TrimSpace(os.Getenv("CLERK_ISSUER"))
 
 	return cfg, nil
 }

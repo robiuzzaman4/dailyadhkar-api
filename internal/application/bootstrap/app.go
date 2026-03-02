@@ -10,6 +10,7 @@ import (
 
 	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/config"
 	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/database"
+	postgresrepo "github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/repository/postgres"
 	httpserver "github.com/robiuzzaman4/daily-durood-api/internal/interfaces/http"
 	"github.com/robiuzzaman4/daily-durood-api/internal/shared/logger"
 )
@@ -36,7 +37,12 @@ func New(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("initialize database: %w", err)
 	}
 
-	server := httpserver.NewServer(cfg.ServerPort, appLogger, db)
+	userRepository := postgresrepo.NewUserRepository(db)
+
+	server, err := httpserver.NewServer(cfg, appLogger, db, userRepository)
+	if err != nil {
+		return nil, fmt.Errorf("initialize http server: %w", err)
+	}
 
 	return &App{
 		Config: cfg,
