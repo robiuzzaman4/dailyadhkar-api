@@ -1,6 +1,6 @@
-# Daily Durood API
+# Daily Adhkar API
 
-Backend service for Daily Durood reminders. The API syncs users from Clerk webhooks, exposes authenticated user/admin endpoints, and sends daily reminder emails through UnoSend on a cron schedule.
+Backend service for Daily Adhkars. The API syncs users from Clerk webhooks, exposes authenticated user/admin endpoints, and sends daily reminder emails through UnoSend on a cron schedule.
 
 ## Tech Stack
 
@@ -42,7 +42,7 @@ cp .env.example .env
 APP_ENV=development
 SERVER_PORT=8080
 
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/daily_durood?sslmode=disable
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/daily_adhkar?sslmode=disable
 
 UNOSEND_API_KEY=your_unosend_api_key
 
@@ -119,13 +119,13 @@ go test ./...
 Build image:
 
 ```bash
-docker build -t daily-durood-api .
+docker build -t dailyadhkar-api .
 ```
 
 Run container:
 
 ```bash
-docker run --rm -p 8080:8080 --env-file .env daily-durood-api
+docker run --rm -p 8080:8080 --env-file .env dailyadhkar-api
 ```
 
 ### Zeabur Note

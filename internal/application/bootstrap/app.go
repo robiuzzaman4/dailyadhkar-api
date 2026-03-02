@@ -8,13 +8,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/application/reminder"
-	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/config"
-	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/database"
-	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/email/unosend"
-	postgresrepo "github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/repository/postgres"
-	httpserver "github.com/robiuzzaman4/daily-durood-api/internal/interfaces/http"
-	"github.com/robiuzzaman4/daily-durood-api/internal/shared/logger"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/application/reminder"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/config"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/database"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/email/unosend"
+	postgresrepo "github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/repository/postgres"
+	httpserver "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/shared/logger"
 )
 
 const shutdownTimeout = 10 * time.Second

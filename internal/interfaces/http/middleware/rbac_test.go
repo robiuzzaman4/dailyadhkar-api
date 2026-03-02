@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 func TestRequireRole_UnauthorizedWithoutUserContext(t *testing.T) {

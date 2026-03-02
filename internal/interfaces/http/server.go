@@ -11,10 +11,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
-	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/auth/clerk"
-	"github.com/robiuzzaman4/daily-durood-api/internal/infrastructure/config"
-	"github.com/robiuzzaman4/daily-durood-api/internal/interfaces/http/middleware"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/auth/clerk"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/config"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
 )
 
 type Server struct {

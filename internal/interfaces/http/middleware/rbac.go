@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 func RequireRole(allowed ...user.Role) func(http.Handler) http.Handler {

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 func TestEmailService_RetriesAndSucceeds(t *testing.T) {
@@ -23,13 +23,13 @@ func TestEmailService_RetriesAndSucceeds(t *testing.T) {
 	service.retryDelay = 1 * time.Millisecond
 	service.maxRetries = 3
 
-	err := service.SendDailyDurood(context.Background(), user.User{
+	err := service.SendDailyAdhkar(context.Background(), user.User{
 		ID:    "u1",
 		Name:  "User One",
 		Email: "user@example.com",
 	})
 	if err != nil {
-		t.Fatalf("SendDailyDurood() returned error: %v", err)
+		t.Fatalf("SendDailyAdhkar() returned error: %v", err)
 	}
 
 	if got := client.calls["user@example.com"]; got != 3 {

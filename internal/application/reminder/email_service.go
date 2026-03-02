@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 const (
 	defaultMaxRetries  = 3
 	defaultRetryDelay  = 2 * time.Second
-	defaultEmailSender = "Daily Durood <noreply@daily-durood.app>"
+	defaultEmailSender = "Daily Adhkar <noreply@daily-adhkar.app>"
 )
 
 type OutboundEmail struct {
@@ -39,12 +39,12 @@ func NewEmailService(client EmailClient) *EmailService {
 	}
 }
 
-func (s *EmailService) SendDailyDurood(ctx context.Context, recipient user.User) error {
+func (s *EmailService) SendDailyAdhkar(ctx context.Context, recipient user.User) error {
 	email := OutboundEmail{
 		From:    defaultEmailSender,
 		To:      recipient.Email,
-		Subject: "Daily Durood Reminder",
-		Text:    fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Durood Sharif.\n\nMay Allah accept your ibadah.", recipient.Name),
+		Subject: "Daily Adhkar",
+		Text:    fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Adhkar.\n\nMay Allah accept your ibadah.", recipient.Name),
 	}
 
 	var lastErr error

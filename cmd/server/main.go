@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/application/bootstrap"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/application/bootstrap"
 )
 
 func main() {

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/application/reminder"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/application/reminder"
 )
 
 const (

@@ -1,4 +1,4 @@
-module github.com/robiuzzaman4/daily-durood-api
+module github.com/robiuzzaman4/dailyadhkar-api
 
 go 1.24
 

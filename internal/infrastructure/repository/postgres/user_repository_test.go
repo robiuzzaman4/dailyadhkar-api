@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 func TestIncrementTotalEmailReceived_AtomicUpdate(t *testing.T) {

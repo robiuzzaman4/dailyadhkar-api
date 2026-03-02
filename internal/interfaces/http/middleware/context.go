@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 type contextKey string

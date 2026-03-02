@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/robiuzzaman4/daily-durood-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 )
 
 type Dispatcher struct {
@@ -53,7 +53,7 @@ func (d *Dispatcher) Dispatch(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 			for recipient := range jobs {
-				if err := d.emailSender.SendDailyDurood(ctx, recipient); err != nil {
+				if err := d.emailSender.SendDailyAdhkar(ctx, recipient); err != nil {
 					d.logger.Error("failed to send daily reminder", "job_id", jobID, "user_id", recipient.ID, "email", recipient.Email, "error", err)
 					continue
 				}

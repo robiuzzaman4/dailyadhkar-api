@@ -5,7 +5,7 @@ This document describes the current HTTP API in an OpenAPI-like format.
 ```yaml
 openapi: 3.1.0
 info:
-  title: Daily Durood API
+  title: Daily Adhkar API
   version: 1.0.0
   description: |
     API for user sync, user profile management, subscription status updates,
