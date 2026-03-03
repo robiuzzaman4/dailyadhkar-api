@@ -20,6 +20,12 @@ func TestLoad_ValidConfig(t *testing.T) {
 	if cfg.EmailSendTime != "10:00AM" {
 		t.Fatalf("expected EmailSendTime=10:00AM, got %s", cfg.EmailSendTime)
 	}
+	if cfg.UnosendBaseURL != "https://www.unosend.co/api/v1/emails" {
+		t.Fatalf("expected UnosendBaseURL to be loaded, got %s", cfg.UnosendBaseURL)
+	}
+	if cfg.DefaultEmailSender != "Daily Adhkar <noreply@send.deentab.app>" {
+		t.Fatalf("expected DefaultEmailSender to be loaded, got %s", cfg.DefaultEmailSender)
+	}
 	if len(cfg.CORSAllowedOrigins) != 2 {
 		t.Fatalf("expected 2 CORS origins, got %d", len(cfg.CORSAllowedOrigins))
 	}
@@ -65,6 +71,8 @@ func setRequiredEnv(t *testing.T) {
 	t.Setenv("SERVER_PORT", "8080")
 	t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/db")
 	t.Setenv("UNOSEND_API_KEY", "test-api-key")
+	t.Setenv("UNOSEND_BASE_URL", "https://www.unosend.co/api/v1/emails")
+	t.Setenv("DEFAUL_EMAIL_SENDER", "Daily Adhkar <noreply@send.deentab.app>")
 	t.Setenv("EMAIL_SEND_TIME", "10:00AM")
 	t.Setenv("EMAIL_SEND_LIMIT", "3")
 	t.Setenv("CLERK_WEBHOOK_SECRET", "whsec_test")

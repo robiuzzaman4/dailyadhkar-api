@@ -9,9 +9,8 @@ import (
 )
 
 const (
-	defaultMaxRetries  = 3
-	defaultRetryDelay  = 2 * time.Second
-	defaultEmailSender = "Daily Adhkar <noreply@daily-adhkar.app>"
+	defaultMaxRetries = 3
+	defaultRetryDelay = 2 * time.Second
 )
 
 type OutboundEmail struct {
@@ -27,13 +26,15 @@ type EmailClient interface {
 
 type EmailService struct {
 	client     EmailClient
+	sender     string
 	maxRetries int
 	retryDelay time.Duration
 }
 
-func NewEmailService(client EmailClient) *EmailService {
+func NewEmailService(client EmailClient, sender string) *EmailService {
 	return &EmailService{
 		client:     client,
+		sender:     sender,
 		maxRetries: defaultMaxRetries,
 		retryDelay: defaultRetryDelay,
 	}
@@ -41,7 +42,7 @@ func NewEmailService(client EmailClient) *EmailService {
 
 func (s *EmailService) SendDailyAdhkar(ctx context.Context, recipient user.User) error {
 	email := OutboundEmail{
-		From:    defaultEmailSender,
+		From:    s.sender,
 		To:      recipient.Email,
 		Subject: "Daily Adhkar",
 		Text:    fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Adhkar.\n\nMay Allah accept your ibadah.", recipient.Name),

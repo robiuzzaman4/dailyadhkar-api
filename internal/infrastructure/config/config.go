@@ -16,6 +16,8 @@ type Config struct {
 	ServerPort           string
 	DatabaseURL          string
 	UnosendAPIKey        string
+	UnosendBaseURL       string
+	DefaultEmailSender   string
 	EmailSendTime        string
 	EmailSendLimit       int
 	CORSAllowedOrigins   []string
@@ -43,6 +45,12 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 	if cfg.UnosendAPIKey, err = required("UNOSEND_API_KEY"); err != nil {
+		return nil, err
+	}
+	if cfg.UnosendBaseURL, err = required("UNOSEND_BASE_URL"); err != nil {
+		return nil, err
+	}
+	if cfg.DefaultEmailSender, err = required("DEFAUL_EMAIL_SENDER"); err != nil {
 		return nil, err
 	}
 	if cfg.EmailSendTime, err = required("EMAIL_SEND_TIME"); err != nil {

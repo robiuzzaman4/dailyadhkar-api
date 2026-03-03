@@ -19,7 +19,7 @@ func TestEmailService_RetriesAndSucceeds(t *testing.T) {
 		},
 	}
 
-	service := NewEmailService(client)
+	service := NewEmailService(client, "Daily Adhkar <noreply@send.deentab.app>")
 	service.retryDelay = 1 * time.Millisecond
 	service.maxRetries = 3
 
@@ -52,7 +52,7 @@ func TestDispatcher_IncrementsOnlyOnSuccessfulSend(t *testing.T) {
 			"two@example.com": 10, // always fails with maxRetries=3
 		},
 	}
-	service := NewEmailService(client)
+	service := NewEmailService(client, "Daily Adhkar <noreply@send.deentab.app>")
 	service.retryDelay = 1 * time.Millisecond
 	service.maxRetries = 3
 

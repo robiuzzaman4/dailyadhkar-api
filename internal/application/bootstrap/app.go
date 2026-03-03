@@ -41,8 +41,8 @@ func New(ctx context.Context) (*App, error) {
 	}
 
 	userRepository := postgresrepo.NewUserRepository(db)
-	emailClient := unosend.NewClient(cfg.UnosendAPIKey)
-	emailService := reminder.NewEmailService(emailClient)
+	emailClient := unosend.NewClient(cfg.UnosendAPIKey, cfg.UnosendBaseURL)
+	emailService := reminder.NewEmailService(emailClient, cfg.DefaultEmailSender)
 	dispatcher := reminder.NewDispatcher(userRepository, emailService, cfg.EmailSendLimit, appLogger)
 	scheduler, err := reminder.NewScheduler(appLogger, cfg.EmailSendTime, dispatcher)
 	if err != nil {

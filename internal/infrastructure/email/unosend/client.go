@@ -13,21 +13,16 @@ import (
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/application/reminder"
 )
 
-const (
-	defaultBaseURL = "https://api.unosend.com"
-	sendPath       = "/v1/emails"
-)
-
 type Client struct {
 	apiKey     string
 	baseURL    string
 	httpClient *http.Client
 }
 
-func NewClient(apiKey string) *Client {
+func NewClient(apiKey string, baseURL string) *Client {
 	return &Client{
 		apiKey:  strings.TrimSpace(apiKey),
-		baseURL: defaultBaseURL,
+		baseURL: strings.TrimSpace(baseURL),
 		httpClient: &http.Client{
 			Timeout: 15 * time.Second,
 		},
@@ -47,7 +42,7 @@ func (c *Client) Send(ctx context.Context, email reminder.OutboundEmail) error {
 		return fmt.Errorf("marshal email payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+sendPath, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("build email request: %w", err)
 	}
