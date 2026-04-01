@@ -32,14 +32,14 @@ type dbQuerier interface {
 
 func (r *UserRepository) Create(ctx context.Context, u user.User) (*user.User, error) {
 	const query = `
-		INSERT INTO users (id, name, email, is_subscribed, total_email_received, role)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, name, email, is_subscribed, total_email_received, role
+		INSERT INTO users (id, name, email, is_subscribed, total_email_received, role, gender)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, name, email, is_subscribed, total_email_received, role, gender
 	`
 
 	created := user.User{}
-	err := r.db.QueryRow(ctx, query, u.ID, u.Name, u.Email, u.IsSubscribed, u.TotalEmailReceived, u.Role).
-		Scan(&created.ID, &created.Name, &created.Email, &created.IsSubscribed, &created.TotalEmailReceived, &created.Role)
+	err := r.db.QueryRow(ctx, query, u.ID, u.Name, u.Email, u.IsSubscribed, u.TotalEmailReceived, u.Role, u.Gender).
+		Scan(&created.ID, &created.Name, &created.Email, &created.IsSubscribed, &created.TotalEmailReceived, &created.Role, &created.Gender)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -55,14 +55,15 @@ func (r *UserRepository) Update(ctx context.Context, u user.User) (*user.User, e
 		    is_subscribed = $4,
 		    total_email_received = $5,
 		    role = $6,
+		    gender = $7,
 		    updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, name, email, is_subscribed, total_email_received, role
+		RETURNING id, name, email, is_subscribed, total_email_received, role, gender
 	`
 
 	updated := user.User{}
-	err := r.db.QueryRow(ctx, query, u.ID, u.Name, u.Email, u.IsSubscribed, u.TotalEmailReceived, u.Role).
-		Scan(&updated.ID, &updated.Name, &updated.Email, &updated.IsSubscribed, &updated.TotalEmailReceived, &updated.Role)
+	err := r.db.QueryRow(ctx, query, u.ID, u.Name, u.Email, u.IsSubscribed, u.TotalEmailReceived, u.Role, u.Gender).
+		Scan(&updated.ID, &updated.Name, &updated.Email, &updated.IsSubscribed, &updated.TotalEmailReceived, &updated.Role, &updated.Gender)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, user.ErrNotFound
 	}
@@ -89,14 +90,14 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*user.User, error) {
 	const query = `
-		SELECT id, name, email, is_subscribed, total_email_received, role
+		SELECT id, name, email, is_subscribed, total_email_received, role, gender
 		FROM users
 		WHERE id = $1
 	`
 
 	u := user.User{}
 	err := r.db.QueryRow(ctx, query, id).
-		Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role)
+		Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role, &u.Gender)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, user.ErrNotFound
 	}
@@ -109,14 +110,14 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*user.User, er
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*user.User, error) {
 	const query = `
-		SELECT id, name, email, is_subscribed, total_email_received, role
+		SELECT id, name, email, is_subscribed, total_email_received, role, gender
 		FROM users
 		WHERE email = $1
 	`
 
 	u := user.User{}
 	err := r.db.QueryRow(ctx, query, email).
-		Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role)
+		Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role, &u.Gender)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, user.ErrNotFound
 	}
@@ -129,7 +130,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*user.Us
 
 func (r *UserRepository) ListSubscribed(ctx context.Context) ([]user.User, error) {
 	const query = `
-		SELECT id, name, email, is_subscribed, total_email_received, role
+		SELECT id, name, email, is_subscribed, total_email_received, role, gender
 		FROM users
 		WHERE is_subscribed = TRUE
 		ORDER BY created_at ASC
@@ -146,7 +147,7 @@ func (r *UserRepository) ListSubscribed(ctx context.Context) ([]user.User, error
 
 func (r *UserRepository) ListByScope(ctx context.Context, requesterID string, requesterRole user.Role) ([]user.User, error) {
 	baseQuery := `
-		SELECT id, name, email, is_subscribed, total_email_received, role
+		SELECT id, name, email, is_subscribed, total_email_received, role, gender
 		FROM users
 	`
 
@@ -214,7 +215,7 @@ func scanUsers(rows pgx.Rows) ([]user.User, error) {
 
 	for rows.Next() {
 		u := user.User{}
-		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role); err != nil {
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.IsSubscribed, &u.TotalEmailReceived, &u.Role, &u.Gender); err != nil {
 			return nil, fmt.Errorf("scan user row: %w", err)
 		}
 		users = append(users, u)

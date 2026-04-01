@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/auth/clerk"
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/config"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/handlers"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
+	// "github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/auth/clerk"
+	// "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/handlers"
+	// "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
 )
 
 func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger, db *pgxpool.Pool, users user.Repository) error {
@@ -33,57 +34,91 @@ func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger,
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	webhookVerifier, err := clerk.NewWebhookVerifier(cfg.ClerkWebhookSecret)
-	if err != nil {
-		return fmt.Errorf("create webhook verifier: %w", err)
-	}
-	mux.Handle("POST /internal/webhooks/clerk", handlers.NewClerkWebhookHandler(logger, users, webhookVerifier))
-
-	tokenVerifier := clerk.NewTokenVerifier(cfg.ClerkJWKSURL, cfg.ClerkIssuer)
-	authMW := middleware.NewAuthMiddleware(clerkTokenVerifierAdapter{verifier: tokenVerifier}, users)
-
-	mux.Handle("GET /internal/auth/check", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestUser, ok := middleware.UserFromContext(r.Context())
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		_ = writeJSON(w, http.StatusOK, map[string]any{
-			"id":    requestUser.ID,
-			"email": requestUser.Email,
-			"role":  requestUser.Role,
-		})
-	})))
-
-	mux.Handle("GET /users/me", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestUser, ok := middleware.UserFromContext(r.Context())
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		profile, err := users.GetByID(r.Context(), requestUser.ID)
-		if errors.Is(err, user.ErrNotFound) {
-			http.Error(w, "user not found", http.StatusNotFound)
-			return
-		}
+	/*
+		webhookVerifier, err := clerk.NewWebhookVerifier(cfg.ClerkWebhookSecret)
 		if err != nil {
-			http.Error(w, "failed to load profile", http.StatusInternalServerError)
+			return fmt.Errorf("create webhook verifier: %w", err)
+		}
+		mux.Handle("POST /internal/webhooks/clerk", handlers.NewClerkWebhookHandler(logger, users, webhookVerifier))
+
+		tokenVerifier := clerk.NewTokenVerifier(cfg.ClerkJWKSURL, cfg.ClerkIssuer)
+		authMW := middleware.NewAuthMiddleware(clerkTokenVerifierAdapter{verifier: tokenVerifier}, users)
+
+		mux.Handle("GET /internal/auth/check", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestUser, ok := middleware.UserFromContext(r.Context())
+			if !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			_ = writeJSON(w, http.StatusOK, map[string]any{
+				"id":    requestUser.ID,
+				"email": requestUser.Email,
+				"role":  requestUser.Role,
+			})
+		})))
+
+		mux.Handle("GET /users/me", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestUser, ok := middleware.UserFromContext(r.Context())
+			if !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			profile, err := users.GetByID(r.Context(), requestUser.ID)
+			if errors.Is(err, user.ErrNotFound) {
+				http.Error(w, "user not found", http.StatusNotFound)
+				return
+			}
+			if err != nil {
+				http.Error(w, "failed to load profile", http.StatusInternalServerError)
+				return
+			}
+
+			_ = writeJSON(w, http.StatusOK, profile)
+		})))
+	*/
+
+	// New direct CRUD routes
+
+	mux.Handle("POST /users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Name   string `json:"name"`
+			Email  string `json:"email"`
+			Gender string `json:"gender"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid JSON payload", http.StatusBadRequest)
 			return
 		}
 
-		_ = writeJSON(w, http.StatusOK, profile)
-	})))
-
-	mux.Handle("GET /users", authMW.RequireAuth(middleware.RequireRole(user.RoleAdmin)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestUser, ok := middleware.UserFromContext(r.Context())
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+		if req.Name == "" || req.Email == "" || req.Gender == "" {
+			http.Error(w, "name, email, and gender are required", http.StatusBadRequest)
 			return
 		}
 
-		allUsers, err := users.ListByScope(r.Context(), requestUser.ID, requestUser.Role)
+		newID := uuid.New().String()
+
+		createdUser, err := users.Create(r.Context(), user.User{
+			ID:                 newID,
+			Name:               req.Name,
+			Email:              req.Email,
+			Gender:             user.Gender(req.Gender),
+			IsSubscribed:       true,
+			TotalEmailReceived: 0,
+			Role:               user.RoleUser,
+		})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to create user: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		_ = writeJSON(w, http.StatusCreated, createdUser)
+	}))
+
+	mux.Handle("GET /users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Bypassing scope check, list all users for now
+		allUsers, err := users.ListByScope(r.Context(), "", user.RoleAdmin)
 		if err != nil {
 			http.Error(w, "failed to load users", http.StatusInternalServerError)
 			return
@@ -92,22 +127,12 @@ func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger,
 		_ = writeJSON(w, http.StatusOK, map[string]any{
 			"users": allUsers,
 		})
-	}))))
+	}))
 
-	mux.Handle("GET /users/{id}", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestUser, ok := middleware.UserFromContext(r.Context())
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
+	mux.Handle("GET /users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		targetID := strings.TrimSpace(r.PathValue("id"))
 		if targetID == "" {
 			http.Error(w, "invalid user id", http.StatusBadRequest)
-			return
-		}
-		if requestUser.Role != user.RoleAdmin && requestUser.ID != targetID {
-			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
 
@@ -122,22 +147,12 @@ func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger,
 		}
 
 		_ = writeJSON(w, http.StatusOK, profile)
-	})))
+	}))
 
-	mux.Handle("PATCH /users/{id}", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestUser, ok := middleware.UserFromContext(r.Context())
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
+	mux.Handle("PATCH /users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		targetID := strings.TrimSpace(r.PathValue("id"))
 		if targetID == "" {
 			http.Error(w, "invalid user id", http.StatusBadRequest)
-			return
-		}
-		if requestUser.Role != user.RoleAdmin && requestUser.ID != targetID {
-			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
 
@@ -175,7 +190,27 @@ func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger,
 		}
 
 		_ = writeJSON(w, http.StatusOK, updated)
-	})))
+	}))
+
+	mux.Handle("DELETE /users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		targetID := strings.TrimSpace(r.PathValue("id"))
+		if targetID == "" {
+			http.Error(w, "invalid user id", http.StatusBadRequest)
+			return
+		}
+
+		err := users.Delete(r.Context(), targetID)
+		if errors.Is(err, user.ErrNotFound) {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+		if err != nil {
+			http.Error(w, "failed to delete user", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
 
 	mux.Handle("GET /metadata", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		totalUsers, err := users.CountUsers(r.Context())
