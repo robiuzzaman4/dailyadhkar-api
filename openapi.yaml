@@ -3,16 +3,11 @@ info:
   title: Daily Adhkar API
   version: 1.0.0
   description: >-
-    API for user sync, user profile management, subscription status updates,
-    reminder metadata, and internal Clerk webhook/auth validation.
+    API for user management, subscription status updates,
+    reminder metadata, and daily email scheduling.
 servers:
   - url: http://localhost:8080
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     User:
       type: object
@@ -24,6 +19,11 @@ components:
         email:
           type: string
           format: email
+        gender:
+          type: string
+          enum:
+            - male
+            - female
         is_subscribed:
           type: boolean
         total_email_received:
@@ -37,9 +37,27 @@ components:
         - id
         - name
         - email
+        - gender
         - is_subscribed
         - total_email_received
         - role
+    CreateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+      required:
+        - name
+        - email
+        - gender
     UsersListResponse:
       type: object
       properties:
@@ -66,29 +84,6 @@ components:
           type: boolean
       required:
         - is_subscribed
-    InternalAuthCheckResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum:
-            - user
-            - admin
-      required:
-        - id
-        - email
-        - role
-    InternalWebhookAck:
-      type: object
-      properties:
-        ok:
-          type: boolean
-      required:
-        - ok
 paths:
   /health:
     get:
@@ -104,25 +99,9 @@ paths:
                 example: ok
         '503':
           description: Database unavailable
-  /users/me:
-    get:
-      summary: Get current user profile
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Current user profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '401':
-          description: Missing or invalid token, or user not found
   /users:
     get:
-      summary: Get all users (admin only)
-      security:
-        - bearerAuth: []
+      summary: Get all users
       responses:
         '200':
           description: List of users
@@ -130,15 +109,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UsersListResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden (non-admin)
+        '500':
+          description: Failed to load users
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              newUser:
+                value:
+                  name: John Doe
+                  email: john@example.com
+                  gender: male
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid payload or missing fields
+        '500':
+          description: Failed to create user
   /users/{id}:
     get:
-      summary: Get single user by ID (self or admin)
-      security:
-        - bearerAuth: []
+      summary: Get single user by ID
       parameters:
         - name: id
           in: path
@@ -152,17 +152,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
+        '400':
+          description: Invalid user ID
         '404':
           description: User not found
+        '500':
+          description: Failed to load user
     patch:
-      summary: Update user subscription status (self or admin)
+      summary: Update user subscription status
       description: Updates only is_subscribed.
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -191,12 +189,27 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           description: Invalid payload or user ID
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
         '404':
           description: User not found
+        '500':
+          description: Failed to update user
+    delete:
+      summary: Delete user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '400':
+          description: Invalid user ID
+        '404':
+          description: User not found
+        '500':
+          description: Failed to delete user
   /metadata:
     get:
       summary: Get aggregate metadata
@@ -210,85 +223,3 @@ paths:
                 $ref: '#/components/schemas/MetadataResponse'
         '500':
           description: Failed to load metadata
-  /internal/auth/check:
-    get:
-      summary: Internal auth validation
-      description: Validates bearer token and returns minimal identity payload.
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Authenticated user identity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalAuthCheckResponse'
-        '401':
-          description: Unauthorized
-  /internal/webhooks/clerk:
-    post:
-      summary: Clerk webhook receiver (internal)
-      description: Receives Clerk events and syncs users for user.created and user.updated.
-      parameters:
-        - name: svix-id
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: svix-timestamp
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: svix-signature
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  type: string
-                  example: user.created
-                data:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    first_name:
-                      type: string
-                    last_name:
-                      type: string
-                    username:
-                      type: string
-                    primary_email_address_id:
-                      type: string
-                    email_addresses:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                          email_address:
-                            type: string
-      responses:
-        '200':
-          description: Webhook accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalWebhookAck'
-        '400':
-          description: Invalid payload or body
-        '401':
-          description: Invalid webhook signature
-        '405':
-          description: Method not allowed
-        '500':
-          description: Failed to sync user

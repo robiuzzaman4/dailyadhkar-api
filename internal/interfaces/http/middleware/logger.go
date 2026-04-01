@@ -1,4 +1,4 @@
-package logger
+package middleware
 
 import (
 	"log/slog"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func New(env string) *slog.Logger {
+func NewLogger(env string) *slog.Logger {
 	level := slog.LevelInfo
 	if strings.EqualFold(env, "development") {
 		level = slog.LevelDebug

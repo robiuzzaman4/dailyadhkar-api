@@ -25,10 +25,11 @@ func RequireRequestID(next http.Handler) http.Handler {
 	})
 }
 
-func LogRequests(logger *slog.Logger, next http.Handler) http.Handler {
+func LogRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		started := time.Now()
 		requestID, _ := RequestIDFromContext(r.Context())
+		logger := slog.Default()
 
 		recorder := &statusRecorder{
 			ResponseWriter: w,

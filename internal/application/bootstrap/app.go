@@ -14,7 +14,7 @@ import (
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/email/unosend"
 	postgresrepo "github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/repository/postgres"
 	httpserver "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/shared/logger"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
 )
 
 const shutdownTimeout = 10 * time.Second
@@ -33,7 +33,8 @@ func New(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("load config: %w", err)
 	}
 
-	appLogger := logger.New(cfg.AppEnv)
+	appLogger := middleware.NewLogger(cfg.AppEnv)
+	slog.SetDefault(appLogger)
 
 	db, err := database.NewPostgresPool(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -49,7 +50,7 @@ func New(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("initialize reminder scheduler: %w", err)
 	}
 
-	server, err := httpserver.NewServer(cfg, appLogger, db, userRepository)
+	server, err := httpserver.NewServer(cfg, db, userRepository)
 	if err != nil {
 		return nil, fmt.Errorf("initialize http server: %w", err)
 	}

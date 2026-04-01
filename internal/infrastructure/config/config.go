@@ -24,9 +24,6 @@ type Config struct {
 	CORSAllowedMethods   []string
 	CORSAllowedHeaders   []string
 	CORSAllowCredentials bool
-	ClerkWebhookSecret   string
-	ClerkJWKSURL         string
-	ClerkIssuer          string
 }
 
 func Load() (*Config, error) {
@@ -68,17 +65,10 @@ func Load() (*Config, error) {
 	if err != nil || cfg.EmailSendLimit <= 0 {
 		return nil, errors.New("EMAIL_SEND_LIMIT must be a positive integer")
 	}
-	if cfg.ClerkWebhookSecret, err = required("CLERK_WEBHOOK_SECRET"); err != nil {
-		return nil, err
-	}
-	if cfg.ClerkJWKSURL, err = required("CLERK_JWKS_URL"); err != nil {
-		return nil, err
-	}
 	cfg.CORSAllowedOrigins = parseCSVOrDefault(os.Getenv("CORS_ALLOWED_ORIGINS"), []string{"*"})
 	cfg.CORSAllowedMethods = parseCSVOrDefault(os.Getenv("CORS_ALLOWED_METHODS"), []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
 	cfg.CORSAllowedHeaders = parseCSVOrDefault(os.Getenv("CORS_ALLOWED_HEADERS"), []string{"Authorization", "Content-Type", "X-Request-ID"})
 	cfg.CORSAllowCredentials = strings.EqualFold(strings.TrimSpace(os.Getenv("CORS_ALLOW_CREDENTIALS")), "true")
-	cfg.ClerkIssuer = strings.TrimSpace(os.Getenv("CLERK_ISSUER"))
 
 	return cfg, nil
 }

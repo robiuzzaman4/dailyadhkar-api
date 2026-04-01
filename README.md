@@ -1,12 +1,11 @@
 # Daily Adhkar API
 
-Backend service for Daily Adhkars. The API syncs users from Clerk webhooks, exposes authenticated user/admin endpoints, and sends daily reminder emails through UnoSend on a cron schedule.
+Backend service for Daily Adhkars. The API manages users, tracks subscriptions, and sends daily reminder emails through UnoSend on a cron schedule.
 
 ## Tech Stack
 
 - Go (`net/http`, no framework)
 - PostgreSQL (`pgx/v5`)
-- Clerk (webhook + JWT verification)
 - UnoSend (email delivery)
 - Cron scheduler (`robfig/cron/v3`)
 
@@ -17,7 +16,7 @@ cmd/server/                       # Application entrypoint
 internal/application/             # Use-cases and orchestration
 internal/domain/                  # Domain models + repository contracts
 internal/infrastructure/          # Config, DB, external integrations
-internal/interfaces/http/         # HTTP server, routes, middleware, handlers
+internal/interfaces/http/         # HTTP server, routes, middleware
 internal/infrastructure/database/migrations/
 ```
 
@@ -25,7 +24,6 @@ internal/infrastructure/database/migrations/
 
 - Go 1.24+
 - PostgreSQL 14+
-- Clerk application (webhook + JWT issuer/JWKS)
 - UnoSend API key
 
 ## Environment Setup
@@ -45,13 +43,11 @@ SERVER_PORT=8080
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/daily_adhkar?sslmode=disable
 
 UNOSEND_API_KEY=your_unosend_api_key
+UNOSEND_BASE_URL=https://www.unosend.co/api/v1/emails
+DEFAUL_EMAIL_SENDER=Daily Adhkar <noreply@send.deentab.app>
 
 EMAIL_SEND_TIME=10:00AM
 EMAIL_SEND_LIMIT=10
-
-CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
-CLERK_JWKS_URL=https://<your-clerk-domain>/.well-known/jwks.json
-CLERK_ISSUER=https://<your-clerk-domain>
 
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 CORS_ALLOWED_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
@@ -63,7 +59,7 @@ CORS_ALLOW_CREDENTIALS=true
 
 The service fails fast at startup if required values are missing/invalid:
 
-- Required: `DATABASE_URL`, `UNOSEND_API_KEY`, `EMAIL_SEND_TIME`, `EMAIL_SEND_LIMIT`, `CLERK_WEBHOOK_SECRET`, `CLERK_JWKS_URL`
+- Required: `DATABASE_URL`, `UNOSEND_API_KEY`, `UNOSEND_BASE_URL`, `DEFAUL_EMAIL_SENDER`, `EMAIL_SEND_TIME`, `EMAIL_SEND_LIMIT`
 - `EMAIL_SEND_TIME` must be 12-hour format (`10:00AM`)
 - `EMAIL_SEND_LIMIT` must be a positive integer
 
@@ -145,22 +141,12 @@ Current route groups:
 
 - Health: `GET /health`
 - Users:
-  - `GET /users/me`
-  - `GET /users` (admin)
-  - `GET /users/{id}` (self or admin)
-  - `PATCH /users/{id}` (updates `is_subscribed`, self or admin)
+  - `POST /users` (create user with name, email, gender)
+  - `GET /users` (list all users)
+  - `GET /users/{id}` (get single user)
+  - `PATCH /users/{id}` (update `is_subscribed`)
+  - `DELETE /users/{id}` (delete user)
 - Metadata: `GET /metadata`
-- Internal:
-  - `GET /internal/auth/check`
-  - `POST /internal/webhooks/clerk`
-
-## Auth and Webhook Flow
-
-1. Clerk emits `user.created` / `user.updated` to `POST /internal/webhooks/clerk`.
-2. Server verifies Svix signature headers (`svix-id`, `svix-timestamp`, `svix-signature`).
-3. User is created/updated in PostgreSQL with Clerk user ID as primary key.
-4. Auth middleware validates Bearer JWT using Clerk JWKS, loads user from DB, injects user context.
-5. RBAC middleware enforces role checks for admin routes.
 
 ## Daily Cron + Email Workflow
 
@@ -178,5 +164,5 @@ Current route groups:
 ## Operational Notes
 
 - Graceful shutdown handles HTTP server, cron scheduler, and DB pool cleanup.
-- Keep `CLERK_WEBHOOK_SECRET` and `UNOSEND_API_KEY` out of VCS.
+- Keep `UNOSEND_API_KEY` out of VCS.
 - Rotate credentials immediately if exposed.

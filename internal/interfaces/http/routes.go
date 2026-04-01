@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -14,13 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/config"
-	// "github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/auth/clerk"
-	// "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/handlers"
-	// "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
 )
 
-func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger, db *pgxpool.Pool, users user.Repository) error {
+func registerRoutes(mux *http.ServeMux, db *pgxpool.Pool, users user.Repository) error {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
@@ -33,51 +28,6 @@ func registerRoutes(mux *http.ServeMux, cfg *config.Config, logger *slog.Logger,
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	})
-
-	/*
-		webhookVerifier, err := clerk.NewWebhookVerifier(cfg.ClerkWebhookSecret)
-		if err != nil {
-			return fmt.Errorf("create webhook verifier: %w", err)
-		}
-		mux.Handle("POST /internal/webhooks/clerk", handlers.NewClerkWebhookHandler(logger, users, webhookVerifier))
-
-		tokenVerifier := clerk.NewTokenVerifier(cfg.ClerkJWKSURL, cfg.ClerkIssuer)
-		authMW := middleware.NewAuthMiddleware(clerkTokenVerifierAdapter{verifier: tokenVerifier}, users)
-
-		mux.Handle("GET /internal/auth/check", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestUser, ok := middleware.UserFromContext(r.Context())
-			if !ok {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			_ = writeJSON(w, http.StatusOK, map[string]any{
-				"id":    requestUser.ID,
-				"email": requestUser.Email,
-				"role":  requestUser.Role,
-			})
-		})))
-
-		mux.Handle("GET /users/me", authMW.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestUser, ok := middleware.UserFromContext(r.Context())
-			if !ok {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			profile, err := users.GetByID(r.Context(), requestUser.ID)
-			if errors.Is(err, user.ErrNotFound) {
-				http.Error(w, "user not found", http.StatusNotFound)
-				return
-			}
-			if err != nil {
-				http.Error(w, "failed to load profile", http.StatusInternalServerError)
-				return
-			}
-
-			_ = writeJSON(w, http.StatusOK, profile)
-		})))
-	*/
 
 	// New direct CRUD routes
 
