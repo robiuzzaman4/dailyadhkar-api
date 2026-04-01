@@ -12,7 +12,7 @@ import (
 
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/config"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/rest/http/middleware"
 )
 
 type Server struct {

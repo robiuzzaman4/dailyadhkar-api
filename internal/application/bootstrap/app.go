@@ -13,8 +13,8 @@ import (
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/database"
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/email/unosend"
 	postgresrepo "github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/repository/postgres"
-	httpserver "github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http"
-	"github.com/robiuzzaman4/dailyadhkar-api/internal/interfaces/http/middleware"
+	httpserver "github.com/robiuzzaman4/dailyadhkar-api/internal/rest/http"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/rest/http/middleware"
 )
 
 const shutdownTimeout = 10 * time.Second
