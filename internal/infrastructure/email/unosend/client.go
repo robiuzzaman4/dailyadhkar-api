@@ -34,7 +34,14 @@ func (c *Client) Send(ctx context.Context, email reminder.OutboundEmail) error {
 		"from":    email.From,
 		"to":      []string{email.To},
 		"subject": email.Subject,
-		"text":    email.Text,
+	}
+
+	// Include both text and HTML if available
+	if email.HTML != "" {
+		payload["html"] = email.HTML
+	}
+	if email.Text != "" {
+		payload["text"] = email.Text
 	}
 
 	body, err := json.Marshal(payload)

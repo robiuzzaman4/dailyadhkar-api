@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/robiuzzaman4/dailyadhkar-api/internal/domain/user"
+	"github.com/robiuzzaman4/dailyadhkar-api/internal/infrastructure/email"
 )
 
 const (
@@ -18,6 +19,7 @@ type OutboundEmail struct {
 	To      string
 	Subject string
 	Text    string
+	HTML    string
 }
 
 type EmailClient interface {
@@ -25,27 +27,45 @@ type EmailClient interface {
 }
 
 type EmailService struct {
-	client     EmailClient
-	sender     string
-	maxRetries int
-	retryDelay time.Duration
+	client          EmailClient
+	sender          string
+	maxRetries      int
+	retryDelay      time.Duration
+	companyName     string
+	frontendBaseURL string
 }
 
-func NewEmailService(client EmailClient, sender string) *EmailService {
+func NewEmailService(client EmailClient, sender string, companyName string, frontendBaseURL string) *EmailService {
 	return &EmailService{
-		client:     client,
-		sender:     sender,
-		maxRetries: defaultMaxRetries,
-		retryDelay: defaultRetryDelay,
+		client:          client,
+		sender:          sender,
+		maxRetries:      defaultMaxRetries,
+		retryDelay:      defaultRetryDelay,
+		companyName:     companyName,
+		frontendBaseURL: frontendBaseURL,
 	}
 }
 
 func (s *EmailService) SendDailyAdhkar(ctx context.Context, recipient user.User) error {
+	// Render HTML template with user data
+	unsubscribeURL := fmt.Sprintf("%s/unsubscribe?email=%s", s.frontendBaseURL, recipient.Email)
+	htmlContent, err := email.RenderTemplate(email.TemplateDailyAdhkar, email.TemplateData{
+		"name":            recipient.Name,
+		"company_name":    s.companyName,
+		"unsubscribe_url": unsubscribeURL,
+	})
+	if err != nil {
+		return fmt.Errorf("render email template: %w", err)
+	}
+
+	// plainTextContent := fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Adhkar.\n\nMay Allah accept your ibadah.", recipient.Name)
+
 	email := OutboundEmail{
 		From:    s.sender,
 		To:      recipient.Email,
-		Subject: "Daily Adhkar",
-		Text:    fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Adhkar.\n\nMay Allah accept your ibadah.", recipient.Name),
+		Subject: "Daily Adhkar Reminder",
+		// Text:    plainTextContent,
+		HTML: htmlContent,
 	}
 
 	var lastErr error
