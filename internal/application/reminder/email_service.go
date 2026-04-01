@@ -49,8 +49,16 @@ func NewEmailService(client EmailClient, sender string, companyName string, fron
 func (s *EmailService) SendDailyAdhkar(ctx context.Context, recipient user.User) error {
 	// Render HTML template with user data
 	unsubscribeURL := fmt.Sprintf("%s/unsubscribe?email=%s", s.frontendBaseURL, recipient.Email)
+
+	// Determine gender-based greeting
+	genderGreeting := "ভাই"
+	if string(recipient.Gender) == "female" {
+		genderGreeting = "আপু"
+	}
+
 	htmlContent, err := email.RenderTemplate(email.TemplateDailyAdhkar, email.TemplateData{
 		"name":            recipient.Name,
+		"gender":          genderGreeting,
 		"company_name":    s.companyName,
 		"unsubscribe_url": unsubscribeURL,
 	})

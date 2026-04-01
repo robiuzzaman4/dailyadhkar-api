@@ -6,10 +6,11 @@ import (
 	"strings"
 )
 
+//go:embed templates/*.html
 var templateFS embed.FS
 
 const (
-	TemplateDailyAdhkar = "templates/daily_adhkar.html"
+	TemplateDailyAdhkar = "templates/durood_daily_adhkar.html"
 )
 
 type TemplateData map[string]string
