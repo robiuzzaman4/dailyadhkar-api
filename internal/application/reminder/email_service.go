@@ -66,14 +66,11 @@ func (s *EmailService) SendDailyAdhkar(ctx context.Context, recipient user.User)
 		return fmt.Errorf("render email template: %w", err)
 	}
 
-	// plainTextContent := fmt.Sprintf("Assalamu alaikum %s,\n\nThis is your daily reminder to recite Adhkar.\n\nMay Allah accept your ibadah.", recipient.Name)
-
 	email := OutboundEmail{
 		From:    s.sender,
 		To:      recipient.Email,
 		Subject: "Daily Adhkar Reminder",
-		// Text:    plainTextContent,
-		HTML: htmlContent,
+		HTML:    htmlContent,
 	}
 
 	var lastErr error
