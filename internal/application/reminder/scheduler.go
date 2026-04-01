@@ -27,7 +27,14 @@ func NewScheduler(logger *slog.Logger, sendTime string, dispatcher *Dispatcher) 
 	}
 
 	spec := fmt.Sprintf("%d %d * * *", minute, hour)
-	engine := cron.New(cron.WithLocation(time.Local))
+
+	// Load Asia/Dhaka timezone
+	location, err := time.LoadLocation("Asia/Dhaka")
+	if err != nil {
+		return nil, fmt.Errorf("load Asia/Dhaka timezone: %w", err)
+	}
+
+	engine := cron.New(cron.WithLocation(location))
 
 	s := &Scheduler{
 		cron:       engine,
