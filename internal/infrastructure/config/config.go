@@ -14,6 +14,7 @@ import (
 type Config struct {
 	AppEnv               string
 	ServerPort           string
+	AppSecret            string
 	DatabaseURL          string
 	UnosendAPIKey        string
 	UnosendBaseURL       string
@@ -40,6 +41,9 @@ func Load() (*Config, error) {
 
 	var err error
 
+	if cfg.AppSecret, err = required("APP_SECRET"); err != nil {
+		return nil, err
+	}
 	if cfg.DatabaseURL, err = required("DATABASE_URL"); err != nil {
 		return nil, err
 	}

@@ -26,19 +26,24 @@ func NewServer(cfg *config.Config, db *pgxpool.Pool, users user.Repository) (*Se
 		return nil, err
 	}
 
+	handler := middleware.RequireAppSecret(
+		cfg.AppSecret,
+		middleware.RequireRequestID(
+			middleware.LogRequests(
+				middleware.CORS(middleware.CORSConfig{
+					AllowedOrigins:   cfg.CORSAllowedOrigins,
+					AllowedMethods:   cfg.CORSAllowedMethods,
+					AllowedHeaders:   cfg.CORSAllowedHeaders,
+					AllowCredentials: cfg.CORSAllowCredentials,
+				}, mux),
+			),
+		),
+	)
+
 	return &Server{
 		httpServer: &http.Server{
-			Addr: fmt.Sprintf(":%s", cfg.ServerPort),
-			Handler: middleware.RequireRequestID(
-				middleware.LogRequests(
-					middleware.CORS(middleware.CORSConfig{
-						AllowedOrigins:   cfg.CORSAllowedOrigins,
-						AllowedMethods:   cfg.CORSAllowedMethods,
-						AllowedHeaders:   cfg.CORSAllowedHeaders,
-						AllowCredentials: cfg.CORSAllowCredentials,
-					}, mux),
-				),
-			),
+			Addr:              fmt.Sprintf(":%s", cfg.ServerPort),
+			Handler:           handler,
 			ReadHeaderTimeout: 5 * time.Second,
 		},
 	}, nil
