@@ -10,6 +10,6 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Hit the Health Endpoint
+      - name: Hit the Up Endpoint
         run: |
-          curl -s -H "X-App-Secret: ${{ secrets.APP_SECRET }}" https://dailyadhkar-api.onrender.com/health
+          curl -s -H "X-App-Secret: ${{ secrets.APP_SECRET }}" https://dailyadhkar-api.onrender.com/up
