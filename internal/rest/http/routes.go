@@ -29,6 +29,12 @@ func registerRoutes(mux *http.ServeMux, db *pgxpool.Pool, users user.Repository)
 		_, _ = w.Write([]byte("ok"))
 	})
 
+	// this up route for render ping
+	mux.HandleFunc("GET /up", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("server is up"))
+	})
+
 	// New direct CRUD routes
 
 	mux.Handle("POST /users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
